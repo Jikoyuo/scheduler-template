@@ -2,8 +2,19 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { Box, Button, MenuItem, Modal, Select, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  MenuItem,
+  Modal,
+  Select,
+  Stack,
+  TextField,
+} from "@mui/material";
 import useCalendarNew from "./useCalendarNew";
+import { LocalizationProvider, StaticDatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const CalendarNew = () => {
   const {
@@ -19,11 +30,42 @@ const CalendarNew = () => {
     setModalOpen,
     eventDetails,
     setEventDetails,
+    handlePrev,
+    handleNext,
+    handleToday,
+    selectedDate,
+    handleDateChange,
+    setSelectedDate,
   } = useCalendarNew();
 
   return (
     <div>
-      <Box>
+      <Box display={"flex"}>
+      <Box display={"flex"} p={2} gap={2}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <StaticDatePicker
+            displayStaticWrapperAs="desktop"
+            value={dayjs(selectedDate)}
+            onChange={handleDateChange}
+            onMonthChange={(date) => {
+              const calendarApi = calendarRef.current?.getApi();
+              if (calendarApi) {
+                calendarApi.gotoDate(date.toDate());
+                setSelectedDate(date.toDate());
+              }
+            }}
+
+          />
+        </LocalizationProvider>
+      </Box>
+      <Box width={"100%"} p={2} display={"flex"} flexDirection={"column"} gap={2}>
+        <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"}>
+        <Stack direction={"row"} spacing={2}>
+          <Button onClick={handlePrev}>Prev</Button>
+          <Button onClick={handleToday}>Today</Button>
+          <Button onClick={handleNext}>Next</Button>
+        </Stack>
+
         <Button
           value={currentView}
           onClick={(e) => {
@@ -35,6 +77,10 @@ const CalendarNew = () => {
         >
           lupa
         </Button>
+        </Box>
+
+        
+
 
         <Select
           value={currentView}
@@ -166,6 +212,7 @@ const CalendarNew = () => {
             </div>
           </div>
         </Modal>
+      </Box>
       </Box>
     </div>
   );

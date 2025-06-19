@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { useRef, useState } from "react";
 
 export default function useCalendarNew() {
@@ -95,6 +95,42 @@ export default function useCalendarNew() {
     setModalOpen(false);
   };
 
+  const handlePrev = () => {
+    const api = calendarRef.current?.getApi();
+    if (api) {
+      api.prev();
+      setSelectedDate(api.getDate());
+    }
+  };
+
+  const handleNext = () => {
+    const api = calendarRef.current?.getApi();
+    if (api) {
+      api.next();
+      setSelectedDate(api.getDate());
+    }
+  };
+
+  const handleToday = () => {
+    const api = calendarRef.current?.getApi();
+    if (api) {
+      api.today();
+      setSelectedDate(api.getDate());
+    }
+  };
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const datePickerRef = useRef<any>(null);
+
+  const handleDateChange = (date: Dayjs | null) => {
+    if (!date) return;
+    setSelectedDate(date.toDate());
+    const calendarApi = calendarRef.current?.getApi();
+    if (calendarApi) {
+      calendarApi.gotoDate(date.toDate());
+    }
+  };
+
   return {
     handleViewChange,
     handleDateClick,
@@ -109,5 +145,12 @@ export default function useCalendarNew() {
     eventDetails,
     setEventDetails,
     handleAddEventForDays,
+    handlePrev,
+    handleNext,
+    handleToday,
+    datePickerRef,
+    selectedDate,
+    handleDateChange,
+    setSelectedDate,
   };
 }
