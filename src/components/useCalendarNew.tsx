@@ -12,7 +12,7 @@ export default function useCalendarNew() {
     title: "",
     startTime: "",
     endTime: "",
-    notes: "", // Catatan ditambahkan
+    notes: "",
   });
 
   interface NewEvent {
@@ -125,7 +125,7 @@ export default function useCalendarNew() {
       kamis: 4,
       jumat: 5,
       sabtu: 6,
-      minggu: 0,
+      minggu: 7,
     };
 
     // Menyiapkan event baru yang akan dibuat
@@ -148,39 +148,45 @@ export default function useCalendarNew() {
 
         // Proses event selama setahun untuk setiap hari yang dipilih
         let tempDate = currentDate.clone();
+
+        // Cek apakah tempDate berada di minggu yang sama dengan yang diinginkan
+        if (tempDate.day() !== selectedDayNumber) {
+          tempDate = tempDate.add(
+            (selectedDayNumber - tempDate.day() + 7) % 7,
+            "days"
+          );
+        }
+
         while (tempDate.isBefore(dayjs().add(1, "year"))) {
           console.log("Checking currentDate:", tempDate.format("YYYY-MM-DD"));
 
-          // Cek apakah hari ini sesuai dengan hari yang dipilih
-          if (tempDate.day() === selectedDayNumber) {
-            const eventStartDateTime = tempDate
-              .set("hour", parseInt(eventStart.split(":")[0]))
-              .set("minute", parseInt(eventStart.split(":")[1]))
-              .set("second", 0);
+          const eventStartDateTime = tempDate
+            .set("hour", parseInt(eventStart.split(":")[0]))
+            .set("minute", parseInt(eventStart.split(":")[1]))
+            .set("second", 0);
 
-            const eventEndDateTime = tempDate
-              .set("hour", parseInt(eventEnd.split(":")[0]))
-              .set("minute", parseInt(eventEnd.split(":")[1]))
-              .set("second", 0);
+          const eventEndDateTime = tempDate
+            .set("hour", parseInt(eventEnd.split(":")[0]))
+            .set("minute", parseInt(eventEnd.split(":")[1]))
+            .set("second", 0);
 
-            // Membuat session ID berdasarkan event ID dan tanggal
-            const eventId = `${eventDetails.id}`; // Menjaga ID event utama tetap sama
-            const sessionId = `${eventId}-${tempDate.format("YYYY-MM-DD")}`; // Session ID berdasarkan tanggal
+          // Membuat session ID berdasarkan event ID dan tanggal
+          const eventId = `${eventDetails.id}`; // Menjaga ID event utama tetap sama
+          const sessionId = `${eventId}-${tempDate.format("YYYY-MM-DD")}`; // Session ID berdasarkan tanggal
 
-            // Pastikan tidak ada duplikasi ID
-            if (!existingEventIds.has(sessionId)) {
-              existingEventIds.add(sessionId);
-              newEvents.push({
-                id: sessionId, // ID unik untuk setiap sesi
-                parentEventId: eventId, // Mengaitkan sesi dengan event utama
-                title: eventDetails.title,
-                start: eventStartDateTime.format("YYYY-MM-DDTHH:mm:ss"),
-                end: eventEndDateTime.format("YYYY-MM-DDTHH:mm:ss"),
-                description: newEvent.notes, // Menyertakan catatan
-              });
+          // Pastikan tidak ada duplikasi ID
+          if (!existingEventIds.has(sessionId)) {
+            existingEventIds.add(sessionId);
+            newEvents.push({
+              id: sessionId, // ID unik untuk setiap sesi
+              parentEventId: eventId, // Mengaitkan sesi dengan event utama
+              title: eventDetails.title,
+              start: eventStartDateTime.format("YYYY-MM-DDTHH:mm:ss"),
+              end: eventEndDateTime.format("YYYY-MM-DDTHH:mm:ss"),
+              description: newEvent.notes, // Menyertakan catatan
+            });
 
-              isAnyDaySelected = true; // Menandakan bahwa ada hari yang dipilih
-            }
+            isAnyDaySelected = true; // Menandakan bahwa ada hari yang dipilih
           }
 
           // Lanjutkan ke minggu berikutnya
