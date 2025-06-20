@@ -22,6 +22,12 @@ export default function useCalendarNew() {
   };
 
   const handleDateClick = (arg: any) => {
+    const clickedDate = dayjs(arg.date);
+
+    if (clickedDate.isBefore(dayjs(), "day")) {
+      // Prevent adding events on past dates
+      return;
+    }
     setEventDetails({
       id: Date.now().toString(),
       title: "",
@@ -130,6 +136,8 @@ export default function useCalendarNew() {
       calendarApi.gotoDate(date.toDate());
     }
   };
+
+  
 
   return {
     handleViewChange,
