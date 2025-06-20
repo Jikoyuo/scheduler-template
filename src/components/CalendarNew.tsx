@@ -3,7 +3,8 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Box, Button, MenuItem, Modal, Select, TextField } from "@mui/material";
-import useCalendarNew from "./useCalendarNew";
+import useCalendarNew from "./useCalendarNew"; // Menyertakan hook custom untuk logika
+import shorthenedDays from "./shorthenedDays";
 
 const CalendarNew = () => {
   const {
@@ -11,7 +12,6 @@ const CalendarNew = () => {
     handleDateClick,
     handleEventClick,
     handleAddEventForDays,
-    handleDeleteEvent,
     modalOpen,
     currentView,
     calendarRef,
@@ -19,155 +19,176 @@ const CalendarNew = () => {
     setModalOpen,
     eventDetails,
     setEventDetails,
-  } = useCalendarNew();
+    days,
+    toggleDay,
+    newEvent,
+    handleTimeChange, // Fungsi untuk mengubah startTime dan endTime
+  } = useCalendarNew(); // Menggunakan custom hook untuk menangani logika penjadwalan
+
+  // Daftar pilihan waktu
+  const timeOptions = [
+    "07:00",
+    "07:30",
+    "08:00",
+    "08:30",
+    "09:00",
+    "09:30",
+    "10:00",
+  ];
 
   return (
-    <div>
-      <Box>
-        <Button
-          value={currentView}
-          onClick={(e) => {
-            const target = e.target as HTMLButtonElement;
-            console.log("hi ", target.value);
+    <Box>
+      <Button
+        onClick={() => setModalOpen(true)} // Tombol untuk menampilkan modal
+        type="submit"
+        variant="outlined"
+      >
+        Tambah Jadwal
+      </Button>
+
+      <Select
+        value={currentView}
+        onChange={(e) => handleViewChange(e.target.value as string)}
+        sx={{
+          minWidth: "200px",
+          minHeight: "38px",
+          borderRadius: "8px",
+          border: "1px solid #A8A8BD",
+        }}
+      >
+        <MenuItem value="dayGridMonth">Bulan</MenuItem>
+        <MenuItem value="timeGridWeek">Minggu</MenuItem>
+        <MenuItem value="timeGridDay">Hari</MenuItem>
+      </Select>
+
+      <FullCalendar
+        ref={calendarRef}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView={currentView}
+        locale="id"
+        events={events} // Pass the updated events state to FullCalendar
+        selectable
+        dayMaxEvents
+        nowIndicator={true}
+        eventClick={handleEventClick}
+        dateClick={handleDateClick}
+      />
+
+      {/* Modal untuk input event */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+        <div
+          style={{
+            padding: "20px",
+            backgroundColor: "white",
+            margin: "50px auto",
+            width: "300px",
           }}
-          type="submit"
-          variant="outlined"
         >
-          lupa
-        </Button>
+          <h3>{eventDetails.id ? "Edit Event" : "Tambah Event"}</h3>
+          <TextField
+            label="Title"
+            value={eventDetails.title}
+            onChange={(e) =>
+              setEventDetails({ ...eventDetails, title: e.target.value })
+            }
+            fullWidth
+          />
 
-        <Select
-          value={currentView}
-          onChange={(e) => handleViewChange(e.target.value as string)}
-          sx={{
-            minWidth: "200px",
-            minHeight: "38px",
-            borderRadius: "8px",
-            border: "1px solid #A8A8BD",
-          }}
-        >
-          <MenuItem value="dayGridMonth">Bulan</MenuItem>
-          <MenuItem value="timeGridWeek">Minggu</MenuItem>
-          <MenuItem value="timeGridDay">Hari</MenuItem>
-        </Select>
+          {/* Pilihan Start Time dan End Time menggunakan button */}
+          <div>
+            <h4>Start Time</h4>
+            {timeOptions.map((time) => (
+              <Button
+                key={time}
+                onClick={() => handleTimeChange("startTime", time)}
+                sx={{
+                  margin: "5px",
+                  padding: "5px 10px",
+                  border: "1px solid #8F85F3",
+                  color: eventDetails.startTime === time ? "#fff" : "#8F85F3",
+                  backgroundColor:
+                    eventDetails.startTime === time ? "#8F85F3" : "transparent",
+                  borderRadius: "8px",
+                }}
+              >
+                {time}
+              </Button>
+            ))}
+          </div>
 
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView={currentView}
-          locale="id"
-          timeZone="local"
-          headerToolbar={false}
-          height="85vh"
-          events={[...events]}
-          selectable
-          dayMaxEvents
-          nowIndicator={true}
-          views={{
-            timeGridWeek: {
-              titleFormat: { month: "long", year: "numeric" },
-              slotDuration: "01:00:00",
-              slotLabelInterval: "01:00",
-            },
-            timeGridDay: {
-              titleFormat: {
-                month: "long",
-                year: "numeric",
-                day: "numeric",
-              },
-              slotDuration: "01:00:00",
-              slotLabelInterval: "01:00",
-            },
-          }}
-          slotMinTime="00:00:00"
-          slotMaxTime="24:00:00"
-          eventOverlap={false}
-          eventDisplay="block"
-          eventClick={handleEventClick}
-          dateClick={handleDateClick}
-        />
+          <div>
+            <h4>End Time</h4>
+            {timeOptions.map((time) => (
+              <Button
+                key={time}
+                onClick={() => handleTimeChange("endTime", time)}
+                sx={{
+                  margin: "5px",
+                  padding: "5px 10px",
+                  border: "1px solid #8F85F3",
+                  color: eventDetails.endTime === time ? "#fff" : "#8F85F3",
+                  backgroundColor:
+                    eventDetails.endTime === time ? "#8F85F3" : "transparent",
+                  borderRadius: "8px",
+                }}
+              >
+                {time}
+              </Button>
+            ))}
+          </div>
 
-        <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-          <div
-            style={{
-              padding: "20px",
-              backgroundColor: "white",
-              margin: "50px auto",
-              width: "300px",
-            }}
-          >
-            <h3>{eventDetails.id ? "Edit Event" : "Add Event"}</h3>
-            <TextField
-              label="Title"
-              value={eventDetails.title}
-              onChange={(e) =>
-                setEventDetails({ ...eventDetails, title: e.target.value })
-              }
-              fullWidth
-            />
-            <TextField
-              label="Start Time"
-              value={eventDetails.startTime}
-              onChange={(e) =>
-                setEventDetails({ ...eventDetails, startTime: e.target.value })
-              }
-              fullWidth
-              style={{ marginTop: "10px" }}
-            />
-            <TextField
-              label="End Time"
-              value={eventDetails.endTime}
-              onChange={(e) =>
-                setEventDetails({ ...eventDetails, endTime: e.target.value })
-              }
-              fullWidth
-              style={{ marginTop: "10px" }}
-            />
-
-            <Select
-              value={eventDetails.id}
-              onChange={(e) =>
-                setEventDetails({ ...eventDetails, id: e.target.value })
-              }
+          {/* Pilihan Hari */}
+          {days.map((day) => (
+            <Button
+              key={day.value}
+              onClick={() => toggleDay(day.value)}
               sx={{
-                minWidth: "200px",
-                minHeight: "38px",
-                borderRadius: "8px",
-                border: "1px solid #A8A8BD",
+                width: "50%",
+                minWidth: "0px",
+                border: "1px solid #8F85F3",
+                color: newEvent[day.value as keyof typeof newEvent]
+                  ? "#fff"
+                  : "#8F85F3",
+                backgroundColor: newEvent[day.value as keyof typeof newEvent]
+                  ? "#8F85F3"
+                  : "transparent",
+                borderRadius: "16px",
+                padding: 1,
+                "&:hover": {
+                  bgcolor: "#8F85F3",
+                  color: "white",
+                },
+                transition: "background-color 0.3s, color 0.3s",
               }}
             >
-              <MenuItem value="senin">Senin</MenuItem>
-              <MenuItem value="selasa">Selasa</MenuItem>
-              <MenuItem value="rabu">Rabu</MenuItem>
-              <MenuItem value="kamis">Kamis</MenuItem>
-              <MenuItem value="jumat">Jumat</MenuItem>
-              <MenuItem value="sabtu">Sabtu</MenuItem>
-              <MenuItem value="minggu">Minggu</MenuItem>
-            </Select>
+              {day.label}
+            </Button>
+          ))}
 
-            <div style={{ marginTop: "20px", textAlign: "center" }}>
-              <Button
-                onClick={() => handleAddEventForDays(eventDetails.id)}
-                color="primary"
-                variant="contained"
-              >
-                Save
-              </Button>
-              {eventDetails.id && (
-                <Button
-                  onClick={handleDeleteEvent}
-                  color="secondary"
-                  variant="contained"
-                  style={{ marginLeft: "10px" }}
-                >
-                  Delete
-                </Button>
-              )}
-            </div>
+          {/* Catatan / Deskripsi */}
+          <TextField
+            label="Catatan"
+            value={eventDetails.notes}
+            onChange={(e) =>
+              setEventDetails({ ...eventDetails, notes: e.target.value })
+            }
+            fullWidth
+            style={{ marginTop: "10px" }}
+          />
+
+          {/* Tombol Simpan */}
+          <div style={{ marginTop: "20px", textAlign: "center" }}>
+            <Button
+              onClick={handleAddEventForDays} // Menambahkan event berdasarkan hari yang dipilih
+              color="primary"
+              variant="contained"
+            >
+              Save
+            </Button>
           </div>
-        </Modal>
-      </Box>
-    </div>
+        </div>
+      </Modal>
+    </Box>
   );
 };
 
